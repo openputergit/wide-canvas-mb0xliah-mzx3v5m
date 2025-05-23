@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TLG Gaming - Tournament Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        .gaming-bg {
+            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)), url('https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="gaming-bg min-h-screen text-white">
+    <!-- Navigation -->
+    <nav class="bg-black/80 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-blue-500">TLG GAMING</h1>
+            <div class="space-x-4">
+                <button onclick="showSection('tournaments')" class="hover:text-blue-500">Tournaments</button>
+                <button onclick="showSection('register')" class="hover:text-blue-500">Register Team</button>
+                <button onclick="showSection('chat')" class="hover:text-blue-500">Chat</button>
+                <button onclick="showSection('support')" class="hover:text-blue-500">Support</button>
+                <button onclick="showAdminLogin()" class="hover:text-blue-500">Admin</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto p-4">
+        <!-- Tournaments Section -->
+        <div id="tournaments" class="section space-y-4">
+            <h2 class="text-2xl font-bold mb-4">Active Tournaments</h2>
+            <div id="tournamentsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Tournaments will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Team Registration Section -->
+        <div id="register" class="section hidden">
+            <div class="max-w-md mx-auto bg-black/80 p-6 rounded-lg">
+                <h2 class="text-2xl font-bold mb-4">Team Registration</h2>
+                <form id="registrationForm" class="space-y-4">
+                    <div>
+                        <label>Team Name</label>
+                        <input type="text" required class="w-full p-2 rounded bg-gray-800">
+                    </div>
+                    <div id="playerInputs">
+                        <label>Player Details</label>
+                        <div class="space-y-2">
+                            <div class="flex gap-2">
+                                <input type="text" placeholder="Player Name" class="flex-1 p-2 rounded bg-gray-800">
+                                <input type="text" placeholder="UID" class="w-32 p-2 rounded bg-gray-800">
+                            </div>
+                        </div>
+                        <button type="button" onclick="addPlayerInput()" class="mt-2 text-blue-500">+ Add Player</button>
+                    </div>
+                    <div>
+                        <label>Payment Screenshot</label>
+                        <input type="file" accept="image/*" required class="w-full p-2 rounded bg-gray-800">
+                    </div>
+                    <div class="bg-gray-900 p-3 rounded">
+                        <p class="font-semibold">UPI ID: tlggamers@axl</p>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 p-2 rounded hover:bg-blue-700">Register Team</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Chat Section -->
+        <div id="chat" class="section hidden">
+            <div class="max-w-2xl mx-auto bg-black/80 rounded-lg">
+                <div id="chatMessages" class="h-96 overflow-y-auto p-4 space-y-2">
+                    <!-- Chat messages will appear here -->
+                </div>
+                <div class="p-4 border-t border-gray-700">
+                    <form id="chatForm" class="flex gap-2">
+                        <input type="text" id="messageInput" placeholder="Type your message..." class="flex-1 p-2 rounded bg-gray-800">
+                        <button type="submit" class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">Send</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Support Section -->
+        <div id="support" class="section hidden">
+            <div class="max-w-2xl mx-auto text-center">
+                <h2 class="text-2xl font-bold mb-4">Support</h2>
+                <div class="aspect-video">
+                    <iframe width="100%" height="100%" src="https://www.youtube.com/embed/videoseries?list=UU@tlggaming426" frameborder="0" allowfullscreen></iframe>
+                </div>
+                <a href="https://youtube.com/@tlggaming426?si=cZoU7kr50fVHXYqJ" target="_blank" class="inline-block mt-4 bg-red-600 px-6 py-2 rounded hover:bg-red-700">
+                    Subscribe to our Channel
+                </a>
+            </div>
+        </div>
+
+        <!-- Admin Login Modal -->
+        <div id="adminModal" class="fixed inset-0 bg-black/50 hidden justify-center items-center">
+            <div class="bg-gray-900 p-6 rounded-lg w-96">
+                <h2 class="text-2xl font-bold mb-4">Admin Login</h2>
+                <form id="adminLoginForm" class="space-y-4">
+                    <div>
+                        <label>Username</label>
+                        <input type="text" id="adminUsername" class="w-full p-2 rounded bg-gray-800">
+                    </div>
+                    <div>
+                        <label>Password</label>
+                        <input type="password" id="adminPassword" class="w-full p-2 rounded bg-gray-800">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 p-2 rounded hover:bg-blue-700">Login</button>
+                    <button type="button" onclick="hideAdminLogin()" class="w-full bg-gray-700 p-2 rounded hover:bg-gray-600">Cancel</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="section hidden">
+            <div class="bg-black/80 p-6 rounded-lg">
+                <h2 class="text-2xl font-bold mb-4">Admin Dashboard</h2>
+                <div class="space-y-6">
+                    <!-- Create Tournament Form -->
+                    <div>
+                        <h3 class="text-xl font-semibold mb-3">Create Tournament</h3>
+                        <form id="createTournamentForm" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input type="text" placeholder="Tournament Title" class="p-2 rounded bg-gray-800">
+                                <input type="datetime-local" class="p-2 rounded bg-gray-800">
+                                <input type="number" placeholder="Prize Pool" class="p-2 rounded bg-gray-800">
+                                <input type="number" placeholder="Entry Fee" class="p-2 rounded bg-gray-800">
+                            </div>
+                            <textarea placeholder="Tournament Rules" class="w-full p-2 rounded bg-gray-800 h-32"></textarea>
+                            <button type="submit" class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">Create Tournament</button>
+                        </form>
+                    </div>
+
+                    <!-- Manage Tournaments -->
+                    <div>
+                        <h3 class="text-xl font-semibold mb-3">Manage Tournaments</h3>
+                        <div id="adminTournamentsList" class="space-y-4">
+                            <!-- Tournament management items will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Team Registrations -->
+                    <div>
+                        <h3 class="text-xl font-semibold mb-3">Team Registrations</h3>
+                        <div id="teamRegistrationsList" class="space-y-4">
+                            <!-- Team registrations will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // MongoDB Integration
+        const appSlug = 'tlg-gaming-123456';
+        const apiEndpoint = 'https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/mongodb';
+        const apiToken = 'mQAGh56FrUZN9lUtIyfc37azEBl1';
+
+        // Firebase Configuration (Replace with your config)
+        const firebaseConfig = {
+            // Your Firebase config here
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Utility Functions
+        async function fetchFromMongoDB(action, collection, data = null, conditions = null) {
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        appSlug,
+                        action,
+                        collection,
+                        data,
+                        conditions
+                    })
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('MongoDB Error:', error);
+                return null;
+            }
+        }
+
+        // Navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+
+        // Admin Functions
+        function showAdminLogin() {
+            document.getElementById('adminModal').classList.remove('hidden');
+            document.getElementById('adminModal').classList.add('flex');
+        }
+
+        function hideAdminLogin() {
+            document.getElementById('adminModal').classList.add('hidden');
+            document.getElementById('adminModal').classList.remove('flex');
+        }
+
+        document.getElementById('adminLoginForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+
+            if (username === 'TLGGAMING' && password === '9880117035') {
+                hideAdminLogin();
+                showSection('adminDashboard');
+                loadAdminData();
+            } else {
+                alert('Invalid credentials');
+            }
+        };
+
+        // Tournament Management
+        async function loadTournaments() {
+            const response = await fetchFromMongoDB('read', 'tournaments');
+            const tournamentsList = document.getElementById('tournamentsList');
+            tournamentsList.innerHTML = '';
+
+            if (response?.result) {
+                response.result.forEach(tournament => {
+                    tournamentsList.innerHTML += `
+                        <div class="bg-black/80 p-4 rounded-lg">
+                            <h3 class="text-xl font-bold">${tournament.title}</h3>
+                            <p class="text-gray-300">Prize Pool: ₹${tournament.prizePool}</p>
+                            <p class="text-gray-300">Entry: ₹${tournament.entryFee}</p>
+                            <button class="mt-2 bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">
+                                Join Tournament
+                            </button>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // Chat Functions
+        let chatRef = database.ref('chat');
+        
+        document.getElementById('chatForm').onsubmit = (e) => {
+            e.preventDefault();
+            const message = document.getElementById('messageInput').value;
+            if (message.trim()) {
+                chatRef.push({
+                    message,
+                    timestamp: Date.now()
+                });
+                document.getElementById('messageInput').value = '';
+            }
+        };
+
+        chatRef.on('child_added', (snapshot) => {
+            const message = snapshot.val();
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML += `
+                <div class="bg-gray-800 p-2 rounded">
+                    <p>${message.message}</p>
+                </div>
+            `;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        // Team Registration
+        function addPlayerInput() {
+            const playerInputs = document.getElementById('playerInputs');
+            const newInput = document.createElement('div');
+            newInput.className = 'flex gap-2 mt-2';
+            newInput.innerHTML = `
+                <input type="text" placeholder="Player Name" class="flex-1 p-2 rounded bg-gray-800">
+                <input type="text" placeholder="UID" class="w-32 p-2 rounded bg-gray-800">
+            `;
+            playerInputs.insertBefore(newInput, playerInputs.lastElementChild);
+        }
+
+        // Initial Load
+        window.onload = () => {
+            showSection('tournaments');
+            loadTournaments();
+        };
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
